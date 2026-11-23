@@ -1,0 +1,47 @@
+name: Resy sync
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      fresh:
+        description: 'Ignore cached session and use the SESSION_JSON secret'
+        type: boolean
+        default: false
+concurrency:
+  group: resy-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Restore latest session
+        if: ${{ !inputs.fresh }}
+        uses: actions/cache/restore@v4
+        with:
+          path: session.json
+          key: resy-session-never-matches
+          restore-keys: resy-session-
+      - name: Seed session from secret if none cached
+        env:
+          SESSION_JSON: ${{ secrets.SESSION_JSON }}
+        run: |
+          if [ ! -s session.json ]; then printf '%s' "$SESSION_JSON" > session.json; echo "seeded from secret"; else echo "using cached session"; fi
+      - name: Sync
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          SYNC_SECRET: ${{ secrets.SYNC_SECRET }}
+        run: node sync.js
+      - name: Save refreshed session
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: session.json
+          key: resy-session-${{ github.run_id }}
