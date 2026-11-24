@@ -28,6 +28,31 @@ async function scrapeTiles(page) {
   }).catch(e => String(e)));
   return f.evaluate(() => {
     const clean = t => t.split('\n').map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean);
+    const txt = e => e.innerText.replace(/\s+/g, ' ').trim();
+    const real = [...document.querySelectorAll('[data-testid="styled-tile-dashboard"]')];
+    if (real.length) {
+      const res = [];
+      real.forEach((t, i) => {
+        const title = txt(t.querySelector('[data-testid="dashboard-tile-title"]') || t) .slice(0, 100) || `tile${i + 1}`;
+        const heads = [...t.querySelectorAll('.ag-header-cell')];
+        const rowEls = [...t.querySelectorAll('.ag-row')];
+        if (heads.length && rowEls.length) {
+          const ids = heads.map(h => h.getAttribute('col-id'));
+          const header = heads.map(h => txt(h.querySelector('.column-label') || h));
+          const byIdx = {};
+          rowEls.forEach(r => { const k = r.getAttribute('row-index') ?? r.getAttribute('row-id'); (byIdx[k] = byIdx[k] || []).push(...r.querySelectorAll('.ag-cell')); });
+          const rows = Object.keys(byIdx).sort((x, y) => x - y).map(k => {
+            const m = {}; byIdx[k].forEach(c => { m[c.getAttribute('col-id')] = txt(c); });
+            return ids.map(id => m[id] ?? '');
+          });
+          res.push({ heading: title, rows: [header, ...rows] });
+        } else {
+          const l = clean(t.innerText).filter(x => !/^tile actions$/i.test(x) && x !== title);
+          if (l.length) res.push({ heading: title, rows: l.map(x => [x]) });
+        }
+      });
+      if (res.length) return res;
+    }
     const tiles = [...document.querySelectorAll('[class*="tile" i], [data-testid*="tile" i], [class*="dashboard-element" i]')]
       .filter(el => !el.querySelector('[class*="tile" i], [data-testid*="tile" i], [class*="dashboard-element" i]'));
     const out = tiles.map((el, i) => { const l = clean(el.innerText).filter(x => !/^tile actions$/i.test(x)); return l.length > 1 ? { heading: l[0] || `tile${i + 1}`, rows: l.slice(1).map(x => [x]) } : null; }).filter(Boolean);
@@ -70,7 +95,7 @@ async function scrape(page) {
     await page.waitForSelector('table, [role=row]', { timeout: 25000 }).catch(() => {});
     await page.waitForTimeout(2000);
     let tables = await scrape(page);
-    if (!tables.length && p.tiles) { tables = await scrapeTiles(page); console.log(p.name, 'TILES', JSON.stringify(tables).slice(0, 600)); }
+    if (!tables.length && p.tiles) { tables = await scrapeTiles(page); console.log(p.name, 'TILES', JSON.stringify(tables).slice(0, 900)); }
     if (!tables.length) {
       const frames = page.frames().map(f => f.url()).filter(u => u !== 'about:blank').slice(0, 5);
       const text = (await page.evaluate(() => document.body.innerText)).replace(/\s+/g, ' ').slice(0, 300);
