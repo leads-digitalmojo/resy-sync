@@ -32,6 +32,7 @@ async function scrape(page) {
   const ctx = await browser.newContext({ storageState: __dirname + '/session.json' });
   const page = await ctx.newPage();
   for (const p of cfg.pages) {
+   try {
     await page.goto(p.url, { waitUntil: 'domcontentloaded', timeout: 60000 });
     if (/login|signin|auth/i.test(page.url())) {
       notify('Resy session expired. Run: npm run login'); await browser.close(); process.exit(2);
@@ -44,6 +45,11 @@ async function scrape(page) {
       body: JSON.stringify({ secret: cfg.secret, page: p.name, scrapedAt: new Date().toISOString(), tables })
     });
     const body = (await res.text()).slice(0, 80); console.log(p.name, tables.length, 'tables ->', res.status, body);
+    if (p.discover) {
+      const links = await page.$$eval('a[href]', as => [...new Set(as.map(a => a.getAttribute('href')))].filter(h => /portal\/.+\/(analytics|reports?|guests?)/i.test(h)));
+      console.log('LINKS', JSON.stringify(links));
+    }
+   } catch (e) { console.log(p.name, 'FAILED', String(e).slice(0, 120)); }
   }
   await ctx.storageState({ path: __dirname + '/session.json' }); // refresh cookies
   await browser.close();
