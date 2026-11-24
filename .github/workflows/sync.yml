@@ -36,6 +36,7 @@ jobs:
           if [ ! -s session.json ]; then printf '%s' "$SESSION_JSON" > session.json; echo "seeded from secret"; else echo "using cached session"; fi
       - name: Sync
         env:
+          DEBUG_DOM: ${{ vars.DEBUG_DOM }}
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
           SYNC_SECRET: ${{ secrets.SYNC_SECRET }}
         run: node sync.js

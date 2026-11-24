@@ -23,6 +23,12 @@ async function scrapeTiles(page) {
     const n = await f.evaluate(() => document.querySelectorAll('[class*="tile" i], [data-testid*="tile" i]').length + ':' + document.body.innerText.length).catch(() => '');
     stable = n === last && !/^0:/.test(n) ? stable + 1 : 0; last = n;
   }
+  if (process.env.DEBUG_DOM) console.log('STRUCT', await f.evaluate(() => {
+    const q = sel => document.querySelectorAll(sel).length;
+    const info = [...document.querySelectorAll('[data-testid="styled-tile-dashboard"]')].map(t => [!!t.querySelector('[data-testid="dashboard-tile-title"]'), t.querySelectorAll('.ag-row').length, (t.innerText || '').split('\n').filter(Boolean).length].join('/')).join(' ');
+    const other = [...new Set([...document.querySelectorAll('[data-testid]')].map(e => e.getAttribute('data-testid')))].join(',');
+    return JSON.stringify({ styled: q('[data-testid="styled-tile-dashboard"]'), titles: q('[data-testid="dashboard-tile-title"]'), tileClass: q('[class*="tile" i]'), elementCard: q('[class*="ElementCard"]'), reactGrid: q('.react-grid-item'), info, testids: other });
+  }).catch(e => String(e)));
   return f.evaluate((NOISE_SRC) => {
     const NOISE = new RegExp(NOISE_SRC, 'i');
     const clean = t => t.split('\n').map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean);
