@@ -37,9 +37,15 @@ async function scrape(page) {
     if (/login|signin|auth/i.test(page.url())) {
       notify('Resy session expired. Run: npm run login'); await browser.close(); process.exit(2);
     }
-    await page.waitForSelector('table, [role=row]', { timeout: 45000 }).catch(() => {});
-    await page.waitForTimeout(3000);
+    await page.waitForSelector('table, [role=row]', { timeout: 12000 }).catch(() => {});
+    await page.waitForTimeout(2000);
     const tables = await scrape(page);
+    if (!tables.length) {
+      const frames = page.frames().map(f => f.url()).filter(u => u !== 'about:blank').slice(0, 5);
+      const text = (await page.evaluate(() => document.body.innerText)).replace(/\s+/g, ' ').slice(0, 300);
+      console.log(p.name, 'NO TABLES; frames', JSON.stringify(frames), 'text:', text);
+      continue;
+    }
     const res = await fetch(cfg.webhookUrl, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ secret: cfg.secret, page: p.name, scrapedAt: new Date().toISOString(), tables })
