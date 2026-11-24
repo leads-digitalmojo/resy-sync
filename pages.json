@@ -1,5 +1,11 @@
 [
   {
+    "name": "Home",
+    "url": "https://os.resy.com/portal/ny/one40rooftop/Home",
+    "home": true,
+    "minTables": 1
+  },
+  {
     "name": "Covers",
     "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Covers"
   },

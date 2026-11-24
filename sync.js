@@ -14,6 +14,37 @@ function notify(msg) {
 }
 
 const NOISE = /^(Chart|Chart annotations summary|End of interactive chart\.|(Bar|Pie|Line|Column|Area) chart.*|The chart has .*|Results are in .*)$/i;
+async function scrapeHome(page) {
+  await page.waitForFunction(() => /Covers booked/i.test(document.body.innerText), null, { timeout: 30000 }).catch(() => {});
+  let last = -1, stable = 0;
+  for (let i = 0; i < 15 && stable < 3; i++) {
+    await page.waitForTimeout(2000);
+    const n = await page.evaluate(() => document.body.innerText.length);
+    stable = n === last ? stable + 1 : 0; last = n;
+  }
+  const lines = await page.evaluate(() => (document.querySelector('main') || document.body).innerText.split('\n').map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean));
+  const SECTIONS = ['Spread of Covers', 'Upcoming Covers', 'Recent Survey Comments'];
+  const first = lines.findIndex(x => SECTIONS.includes(x));
+  const top = lines.slice(0, first < 0 ? lines.length : first).filter(x => !/^View /i.test(x));
+  const dateIdx = top.findIndex(x => /^Today,/i.test(x));
+  const kpi = top.slice(dateIdx + 1);
+  const out = [];
+  const pairs = [];
+  for (let i = 0; i + 1 < kpi.length; i += 2) pairs.push([kpi[i], kpi[i + 1]]);
+  if (pairs.length) out.push({ heading: 'Today Summary', rows: [['Metric', 'Value'], ...pairs] });
+  if (first >= 0) SECTIONS.forEach((name, si) => {
+    const start = lines.indexOf(name); if (start < 0) return;
+    const ends = SECTIONS.map(n => lines.indexOf(n)).filter(i => i > start);
+    const body = lines.slice(start + 1, ends.length ? Math.min(...ends) : lines.length);
+    if (name === 'Spread of Covers') {
+      const times = body.filter(x => /^\d{1,2}:\d{2}$/.test(x)), caps = body.filter(x => /^\d+\/\d+$/.test(x));
+      if (times.length && times.length === caps.length) { out.push({ heading: name, rows: [['Time', 'Covers / Capacity'], ...times.map((t, i) => [t, caps[i]])] }); return; }
+    }
+    if (body.length) out.push({ heading: name, rows: body.map(x => [x]) });
+  });
+  return out;
+}
+
 async function scrapeTiles(page) {
   const f = page.frames().find(f => /looker/.test(f.url()));
   if (!f) return [];
@@ -96,7 +127,7 @@ async function scrape(page) {
       }
       await page.waitForSelector('table, [role=row]', { timeout: 25000 }).catch(() => {});
       await page.waitForTimeout(2000);
-      let t = await scrape(page);
+      let t = p.home ? await scrapeHome(page) : await scrape(page);
       if (!t.length && p.tiles) t = await scrapeTiles(page);
       if (t.length > tables.length) tables = t;
       if (!p.minTables || tables.length >= p.minTables) break;
