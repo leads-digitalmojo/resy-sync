@@ -10,12 +10,14 @@
   {
     "name": "Today",
     "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Advanced_analytics/today-overview",
-    "tiles": true
+    "tiles": true,
+    "minTables": 5
   },
   {
     "name": "Yesterday",
     "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Advanced_analytics/yesterday-overview",
-    "tiles": true
+    "tiles": true,
+    "minTables": 5
   },
   {
     "name": "Trends",

@@ -88,14 +88,24 @@ async function scrape(page) {
   const page = await ctx.newPage();
   for (const p of cfg.pages) {
    try {
-    await page.goto(p.url, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    if (/login|signin|auth/i.test(page.url())) {
-      notify('Resy session expired. Run: npm run login'); await browser.close(); process.exit(2);
+    let tables = [];
+    for (let attempt = 1; attempt <= (p.minTables ? 3 : 1); attempt++) {
+      await page.goto(p.url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+      if (/login|signin|auth/i.test(page.url())) {
+        notify('Resy session expired. Run: npm run login'); await browser.close(); process.exit(2);
+      }
+      await page.waitForSelector('table, [role=row]', { timeout: 25000 }).catch(() => {});
+      await page.waitForTimeout(2000);
+      let t = await scrape(page);
+      if (!t.length && p.tiles) t = await scrapeTiles(page);
+      if (t.length > tables.length) tables = t;
+      if (!p.minTables || tables.length >= p.minTables) break;
+      console.log(p.name, 'attempt', attempt, 'got', t.length, 'of at least', p.minTables, '- retrying');
     }
-    await page.waitForSelector('table, [role=row]', { timeout: 25000 }).catch(() => {});
-    await page.waitForTimeout(2000);
-    let tables = await scrape(page);
-    if (!tables.length && p.tiles) { tables = await scrapeTiles(page); console.log(p.name, 'tiles:', tables.length); }
+    if (p.minTables && tables.length < p.minTables) {
+      console.log(p.name, 'INCOMPLETE (' + tables.length + ' < ' + p.minTables + '), skipped so the Sheet keeps its last full snapshot');
+      continue;
+    }
     if (!tables.length) {
       console.log(p.name, 'NO TABLES');
       continue;
