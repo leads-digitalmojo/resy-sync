@@ -22,10 +22,10 @@ async function scrapeTiles(page) {
     const clean = t => t.split('\n').map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean);
     const tiles = [...document.querySelectorAll('[class*="tile" i], [data-testid*="tile" i], [class*="dashboard-element" i]')]
       .filter(el => !el.querySelector('[class*="tile" i], [data-testid*="tile" i], [class*="dashboard-element" i]'));
-    const out = tiles.map((el, i) => { const l = clean(el.innerText); return l.length ? { heading: l[0] || `tile${i + 1}`, rows: l.slice(1).map(x => [x]) } : null; }).filter(Boolean);
+    const out = tiles.map((el, i) => { const l = clean(el.innerText).filter(x => !/^tile actions$/i.test(x)); return l.length > 1 ? { heading: l[0] || `tile${i + 1}`, rows: l.slice(1).map(x => [x]) } : null; }).filter(Boolean);
     if (out.length) return out;
     const l = clean(document.body.innerText);
-    return l.length ? [{ heading: 'Dashboard text', rows: l.map(x => [x]) }] : [];
+    return l.length > 1 ? [{ heading: 'Dashboard text', rows: l.map(x => [x]) }] : [];
   }).catch(() => []);
 }
 
