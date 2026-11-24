@@ -16,8 +16,12 @@ function notify(msg) {
 async function scrapeTiles(page) {
   const f = page.frames().find(f => /looker/.test(f.url()));
   if (!f) return [];
-  await f.waitForFunction(() => document.body.innerText.length > 400 && !/loading/i.test(document.body.innerText.slice(0, 200)), null, { timeout: 40000 }).catch(() => {});
-  await page.waitForTimeout(8000);
+  let last = -1, stable = 0;
+  for (let i = 0; i < 30 && stable < 3; i++) {
+    await page.waitForTimeout(3000);
+    const n = await f.evaluate(() => document.querySelectorAll('[class*="tile" i], [data-testid*="tile" i]').length + ':' + document.body.innerText.length).catch(() => '');
+    stable = n === last && !/^0:/.test(n) ? stable + 1 : 0; last = n;
+  }
   return f.evaluate(() => {
     const clean = t => t.split('\n').map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean);
     const tiles = [...document.querySelectorAll('[class*="tile" i], [data-testid*="tile" i], [class*="dashboard-element" i]')]
