@@ -22,6 +22,10 @@ async function scrapeTiles(page) {
     const n = await f.evaluate(() => document.querySelectorAll('[class*="tile" i], [data-testid*="tile" i]').length + ':' + document.body.innerText.length).catch(() => '');
     stable = n === last && !/^0:/.test(n) ? stable + 1 : 0; last = n;
   }
+  if (process.env.DEBUG_DOM) console.log('DOM', await f.evaluate(() => {
+    const c = {}; document.querySelectorAll('*').forEach(e => { if (!e.children.length || !(e.innerText || '').trim()) return; const k = e.tagName + '|' + (e.getAttribute('data-testid') || '') + '|' + String(e.className && e.className.baseVal !== undefined ? e.className.baseVal : e.className).split(' ').slice(0, 3).join('.'); c[k] = (c[k] || 0) + 1; });
+    return JSON.stringify(Object.entries(c).sort((a, b) => b[1] - a[1]).slice(0, 25)) + ' TEXT:' + document.body.innerText.slice(0, 700).replace(/\n/g, ' / ');
+  }).catch(e => String(e)));
   return f.evaluate(() => {
     const clean = t => t.split('\n').map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean);
     const tiles = [...document.querySelectorAll('[class*="tile" i], [data-testid*="tile" i], [class*="dashboard-element" i]')]

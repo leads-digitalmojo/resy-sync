@@ -1,23 +1,5 @@
 [
   {
-    "name": "Covers",
-    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Covers"
-  },
-  {
-    "name": "Reservations",
-    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Reservations"
-  },
-  {
-    "name": "Today",
-    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Advanced_analytics/today-overview",
-    "tiles": true
-  },
-  {
-    "name": "Yesterday",
-    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Advanced_analytics/yesterday-overview",
-    "tiles": true
-  },
-  {
     "name": "Trends",
     "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Advanced_analytics/cover-details",
     "tiles": true
@@ -36,13 +18,5 @@
     "name": "Waitlist",
     "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Advanced_analytics/performance",
     "tiles": true
-  },
-  {
-    "name": "Timing",
-    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/timing"
-  },
-  {
-    "name": "Survey",
-    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Surveys"
   }
 ]
