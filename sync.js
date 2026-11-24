@@ -73,7 +73,7 @@ async function scrape(page) {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ secret: cfg.secret, page: p.name, scrapedAt: new Date().toISOString(), tables })
     });
-    const body = (await res.text()).slice(0, 80); console.log(p.name, tables.length, 'tables ->', res.status, body);
+    const raw = await res.text(); const body = raw.startsWith('ok') ? 'ok' : 'RESPONSE: ' + raw.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 400); console.log(p.name, tables.length, 'tables ->', res.status, body);
     if (p.discover) {
       const links = await page.$$eval('a[href]', as => [...new Set(as.map(a => a.getAttribute('href')))].filter(h => /portal\/.+\/(analytics|reports?|guests?)/i.test(h)));
       console.log('LINKS', JSON.stringify(links));
