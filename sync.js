@@ -14,7 +14,11 @@ function notify(msg) {
 }
 
 async function scrape(page) {
-  return page.evaluate(() => {
+  const all = [];
+  for (const f of page.frames()) {
+    if (f.url() === 'about:blank' || /stripe|kustomer|site\.com/.test(f.url())) continue;
+    if (f !== page.mainFrame()) await f.waitForSelector('table, [role=row], [role=gridcell]', { timeout: 20000 }).catch(() => {});
+    all.push(...await f.evaluate(() => {
     const txt = el => el.innerText.replace(/\s+/g, ' ').trim();
     const out = [];
     document.querySelectorAll('table').forEach((t, i) => {
@@ -23,7 +27,9 @@ async function scrape(page) {
       if (rows.length) out.push({ heading, rows });
     });
     return out;
-  });
+  }).catch(() => []));
+  }
+  return all;
 }
 
 (async () => {
@@ -37,7 +43,7 @@ async function scrape(page) {
     if (/login|signin|auth/i.test(page.url())) {
       notify('Resy session expired. Run: npm run login'); await browser.close(); process.exit(2);
     }
-    await page.waitForSelector('table, [role=row]', { timeout: 12000 }).catch(() => {});
+    await page.waitForSelector('table, [role=row]', { timeout: 25000 }).catch(() => {});
     await page.waitForTimeout(2000);
     const tables = await scrape(page);
     if (!tables.length) {
