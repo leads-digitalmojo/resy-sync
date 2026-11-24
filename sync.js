@@ -13,6 +13,22 @@ function notify(msg) {
   try { execSync(`osascript -e 'display notification "${msg}" with title "Resy sync"'`); } catch (e) {}
 }
 
+async function scrapeTiles(page) {
+  const f = page.frames().find(f => /looker/.test(f.url()));
+  if (!f) return [];
+  await f.waitForFunction(() => document.body.innerText.length > 400 && !/loading/i.test(document.body.innerText.slice(0, 200)), null, { timeout: 40000 }).catch(() => {});
+  await page.waitForTimeout(8000);
+  return f.evaluate(() => {
+    const clean = t => t.split('\n').map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean);
+    const tiles = [...document.querySelectorAll('[class*="tile" i], [data-testid*="tile" i], [class*="dashboard-element" i]')]
+      .filter(el => !el.querySelector('[class*="tile" i], [data-testid*="tile" i], [class*="dashboard-element" i]'));
+    const out = tiles.map((el, i) => { const l = clean(el.innerText); return l.length ? { heading: l[0] || `tile${i + 1}`, rows: l.slice(1).map(x => [x]) } : null; }).filter(Boolean);
+    if (out.length) return out;
+    const l = clean(document.body.innerText);
+    return l.length ? [{ heading: 'Dashboard text', rows: l.map(x => [x]) }] : [];
+  }).catch(() => []);
+}
+
 async function scrape(page) {
   const all = [];
   for (const f of page.frames()) {
@@ -45,7 +61,8 @@ async function scrape(page) {
     }
     await page.waitForSelector('table, [role=row]', { timeout: 25000 }).catch(() => {});
     await page.waitForTimeout(2000);
-    const tables = await scrape(page);
+    let tables = await scrape(page);
+    if (!tables.length && p.tiles) { tables = await scrapeTiles(page); console.log(p.name, 'TILES', JSON.stringify(tables).slice(0, 600)); }
     if (!tables.length) {
       const frames = page.frames().map(f => f.url()).filter(u => u !== 'about:blank').slice(0, 5);
       const text = (await page.evaluate(() => document.body.innerText)).replace(/\s+/g, ' ').slice(0, 300);
