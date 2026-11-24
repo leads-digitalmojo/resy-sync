@@ -1,8 +1,7 @@
 [
   {
     "name": "Covers",
-    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Covers",
-    "discover": true
+    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Covers"
   },
   {
     "name": "Reservations",
@@ -10,34 +9,34 @@
   },
   {
     "name": "Today",
-    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Today"
+    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Advanced_analytics/today-overview"
   },
   {
     "name": "Yesterday",
-    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Yesterday"
+    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Advanced_analytics/yesterday-overview"
   },
   {
     "name": "Trends",
-    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Trends"
+    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Advanced_analytics/cover-details"
   },
   {
     "name": "GuestInfo",
-    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/GuestInfo"
+    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Advanced_analytics/guest-info-overview"
   },
   {
     "name": "PointOfSale",
-    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/PointOfSale"
+    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Advanced_analytics/top-spenders"
   },
   {
     "name": "Waitlist",
-    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Waitlist"
+    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Advanced_analytics/performance"
   },
   {
     "name": "Timing",
-    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Timing"
+    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/timing"
   },
   {
     "name": "Survey",
-    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Survey"
+    "url": "https://os.resy.com/portal/ny/one40rooftop/analytics/Surveys"
   }
 ]
